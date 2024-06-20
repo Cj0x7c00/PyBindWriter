@@ -81,10 +81,6 @@ public:
 	~BasicClass();
 
 	void WhatIs(int a, int b);
-	int Get();
-
-private:
-	int m_i = 2;
 };
 ```
 
@@ -94,7 +90,6 @@ Define a C API to wrap it:
 PY_IMPL_START
 PY_EXPORT void* PyCreate_BasicClass();
 PY_EXPORT void  BasicClass_WhatIs(void* self, int a, int b);
-PY_EXPORT int   BasicClass_Get(void* self);
 PY_EXPORT void  PyDestroy_BasicClass(void* self);
 PY_IMPL_END
 ```
@@ -115,11 +110,6 @@ void BasicClass::WhatIs(int a, int b) {
 	std::cout << "a + b is: " << a + b << '\n';
 }
 
-int BasicClass::Get()
-{
-	return m_i;
-}
-
 BasicClass::~BasicClass()
 {
 	std::cout << "BC says Goodbye\n";
@@ -136,11 +126,6 @@ void* PyCreate_BasicClass()
 void BasicClass_WhatIs(void* self, int a, int b)
 {
 	reinterpret_cast<BasicClass*>(self)->WhatIs(a, b);
-}
-
-int BasicClass_Get(void* self)
-{
-	return reinterpret_cast<BasicClass*>(self)->Get();
 }
 
 void PyDestroy_BasicClass(void* self)
@@ -173,9 +158,9 @@ PY_IMPL_END
 ``` json 
     "funcs":[
         {
-            "name": "add",
-            "params": ["c_int", "c_int"],
-            "return": "c_int"
+            "name": "Main",
+            "params": ["c_char_p"],
+            "return": " "
         }
     ]
 ```
