@@ -4,7 +4,7 @@ import json
 import string
 
 global FLAGS
-FLAGS = {"-v": False}
+FLAGS = {"-v": False, "-o": ""}
 global PRJ_NAME
 DYLIB_DIR =""
 BANNER    ="\
@@ -17,11 +17,11 @@ BANNER    ="\
 ## File Usage: Import DLL and wrap its exposed          ##\n\
 ## functions and classes                                ##\n\
 ##########################################################\n\n"
-
+HELP = "see https://github.com/Cj0x7c00/PyBindWriter/"
 
 def vPrint(fmt):
-    #if FLAGS["-v"]:
-    print(f"{fmt}")
+    if FLAGS["-v"] == True:
+        print(f"== V Out == \n{fmt}")
 
 class File:
     def __init__(self, path):
@@ -61,15 +61,36 @@ class File:
                 self.CLASS_DEFS += fmt
 
     def write(self):
-        with open(self.fpath, 'w') as f:
-            
-            write = self.HEADER + '\n' + self.FUNC_DEFS +  '\n' \
-            + self.CLS_MFUNC_DEFS + '\n' + self.CLASS_DEFS
+        # make sure the out dir ends with "/" or "\"
+        o = FLAGS["-o"]
+        if o != " ":
+            if o[len(o)-1] != "\\" or o[len[o]-1] != "/":
+                o += "/"
 
-            #vPrint(write)
-            f.write(write)
+        of = f"{o}{self.fpath}"
 
-            vPrint(f"Wrote changes to file: {f.name}")
+        # check if path exists, create one if not
+        if os.path.exists(o):
+            with open(of, 'w') as f:
+                
+                write = self.HEADER + '\n' + self.FUNC_DEFS +  '\n' \
+                + self.CLS_MFUNC_DEFS + '\n' + self.CLASS_DEFS
+
+                f.write(write)
+
+                vPrint(f"Wrote changes to file: {f.name}")
+
+        else:
+            os.mkdir(o)
+            with open(of, 'w') as f:
+                
+                write = self.HEADER + '\n' + self.FUNC_DEFS +  '\n' \
+                + self.CLS_MFUNC_DEFS + '\n' + self.CLASS_DEFS
+
+                f.write(write)
+
+                vPrint(f"Wrote changes to file: {f.name}")
+
 
 
     def calc_indention(self):
@@ -105,7 +126,6 @@ def gen_fn_doc(fndta):
     #doc = f"{'\t'*ilevel}"
     doc = f"\"\"\"{fndta['doc']}"
     doc += "\"\"\""
-    #print(doc)
     return doc
 
 def gen_util(file):
@@ -129,7 +149,7 @@ def gen_func_sig(fndat, file, mfn=False):
 
     if "doc" in fndat:
         docstr = gen_fn_doc(fndat)
-        print(docstr)
+        vPrint(f"Docs found: {docstr}")
 
 
     print(f'GEN FN> {name}')
@@ -181,10 +201,8 @@ def gen_func_sig(fndat, file, mfn=False):
                     args += f"{p}{string.ascii_uppercase[i]}, "
                     i += 1
             args = args[:-2]
-            #print(args)
         
             fnwrite += f"def {name}({args}):\n\t{docstr}\n\t{PRJ_NAME}.{name}({args})\n"
-            #print(fnwrite)
             file.app("fd", fnwrite)
     else:
         file.app("cfd", fnwrite)
@@ -259,26 +277,40 @@ def setup_impdta(jd):
 
 def main():
     global DYLIB_DIR, PRJ_NAME, FLAGS
-    wrkdir = sys.argv[0];
+    NO_APPEND = False
     os.system('cls')
-    for arg in sys.argv[1:]:
-        files = []
+    files = []
+    for i, arg in enumerate(sys.argv):
+        if i == 0:
+            wrkdir = arg
+            continue
         match arg:
+            case "-h":
+                print(HELP)
+                quit()
             case "-v":
-                print("Verbose flag enabled")
                 FLAGS["-v"] = True
+                vPrint("Verbose flag enabled")
+                continue
+            case "-o":
+                vPrint(f"Output Dir: {sys.argv[i + 1]}")
+                FLAGS["-o"] = sys.argv[i+1]
+                NO_APPEND = True
+                continue
             case _:
-                files.append(arg)
+                if NO_APPEND == False:
+                    files.append(arg)
+                    continue
 
-        vPrint(f"Working Dir: {wrkdir}")
-        for f in files:
-            with open(f, 'r') as f:
-                data = json.load(f)     
-                PRJ_NAME = data['projName']
-                DYLIB_DIR =  data['dlldir']
-                vPrint(f"== Creating python bridge \"{PRJ_NAME}\" for DLL: {DYLIB_DIR}")
-        
-                setup_impdta(data)
+    vPrint(f"Working Dir: {wrkdir}")
+    for f in files:
+        with open(f, 'r') as f:
+            data = json.load(f)     
+            PRJ_NAME = data['projName']
+            DYLIB_DIR =  data['dlldir']
+            vPrint(f"== Creating python bridge \"{PRJ_NAME}\" for DLL: {DYLIB_DIR}")
+    
+            setup_impdta(data)
 
 
 if __name__ == "__main__":
