@@ -1,11 +1,17 @@
-## PyBindWriter
-PyBindWriter is a simple yet effective tool used to bind C++ and python together. 
+# Getting started
 
-using the native ctypes library in python, you simply give it a path to you .json file, and
-the tool generates a .py file with all the wrappers needed for your DLL
+|Table of contents|
+|---------------|
+|[1. Introduction](#1-introduction)|
+|[2. C/C++ Side of things](#c-side)|
+|[3. Compile](#compiling)          |
+|[4. Binding](#binding)            |
+|[Optional Flags](#flags)          |
+|[5. Final Step](#final-step)      |
 
-# How To
-### C-side 
+
+
+## C-side 
 In your C++ project, you need to create a C API
 
 For the sake of simplicity, were going to define some macros thatll make the API much easier to write
@@ -15,17 +21,17 @@ For the sake of simplicity, were going to define some macros thatll make the API
 #define PY_IMPL_START extern "C" {
 #define PY_IMPL_END } // end C linkage
 ```
-#### functions
+### functions
 For functions, you can either implement them directly within the C linkage (as long as its in a .cpp file):
 ``` C++
 // Source.h //
-extern "C" {
-    PY_EXPORT void InitGLFW();
-    PY_EXPORT void Main(const char * name);
-}
+PY_IMPL_START
+PY_EXPORT void InitGLFW();
+PY_EXPORT void Main(const char * name);
+PY_IMPL_END
 
 // Source.cpp //
-extern "C" {
+PY_IMPL_START
     void InitGLFW()
     {
         if (!glfwInit())
@@ -45,7 +51,7 @@ extern "C" {
             glfwPollEvents();
         }
     }
-}
+PY_IMPL_END
 ```
 or you can wrap pre-existing ones:
 ``` C++
@@ -74,7 +80,7 @@ Write your class:
 
 ``` c++
 
-class PY_EXPORT BasicClass
+class BasicClass
 {
 public:
 	BasicClass();
@@ -135,6 +141,9 @@ void PyDestroy_BasicClass(void* self)
 PY_IMPL_END
 ```
 
+## Compiling
+Compile your C/C++ program into a .DLL/.SO.
+
 
 ## Binding
 1. Create a .json file. name it anything you want.
@@ -167,7 +176,7 @@ PY_IMPL_END
 - to define classes and their member functions:
 ``` json
   "class": [
-    { // Basic Class
+    { 
       "name": "BasicClass",
       "mfuncs": [
         {
@@ -186,6 +195,25 @@ PY_IMPL_END
           "return": " "
         }
       ]
-    } // End Basic Class
+    } 
   ]
 ```
+
+## Flags
+|Flag|Usage|
+|---|---|
+|`-v`| verbose   |
+|`-o`| output dir|
+|`-h`| help      |
+
+## Final Step
+- Run the script using python.
+  - pass in the path to your .json file
+  - It will generate a .py file with the same name specified in `"projName"`
+
+*Example*
+``` shell
+python3 BindWriter.py "path/to/json/file.json" <flags>
+```
+
+The .py file will contain the necessary boilerplate code for your python wrapper. And youll be ready to use your library in python
