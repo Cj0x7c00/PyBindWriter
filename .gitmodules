@@ -1,0 +1,3 @@
+[submodule "PyBindWriter.wiki"]
+	path = PyBindWriter.wiki
+	url = https://github.com/Cj0x7c00/PyBindWriter.wiki.git
