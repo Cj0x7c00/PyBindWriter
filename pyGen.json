@@ -7,7 +7,8 @@
     {
       "name": "InitGLFW",
       "params": " ",
-      "return": " "
+      "return": " ",
+      "doc": "Initialize GLFW"
     },
 
     {
@@ -29,7 +30,8 @@
         {
           "name": "BasicClass_WhatIs",
           "params": ["SELF", "c_int", "c_int"],
-          "return": " "
+          "return": " ",
+          "doc": "prints the sum of the two ints"
         },
         {
           "name": "PyDestroy_BasicClass",

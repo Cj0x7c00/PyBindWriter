@@ -101,6 +101,13 @@ def gen_doc(jdta, file):
     doc += "\n\n"
     file.app("h", doc)
 
+def gen_fn_doc(fndta):
+    #doc = f"{'\t'*ilevel}"
+    doc = f"\"\"\"{fndta['doc']}"
+    doc += "\"\"\""
+    #print(doc)
+    return doc
+
 def gen_util(file):
     util = "## Util ##\n"
     util += "\n\
@@ -114,9 +121,17 @@ def to_cstr(fmt):\n\t\
 def gen_func_sig(fndat, file, mfn=False):
     global PRJ_NAME
     NEEDS_WRITE = False
+    
     name = fndat['name']
     params = fndat['params']
     ret_type = fndat['return']
+    docstr = " "
+
+    if "doc" in fndat:
+        docstr = gen_fn_doc(fndat)
+        print(docstr)
+
+
     print(f'GEN FN> {name}')
 
     if ret_type  ==  " ":
@@ -166,10 +181,10 @@ def gen_func_sig(fndat, file, mfn=False):
                     args += f"{p}{string.ascii_uppercase[i]}, "
                     i += 1
             args = args[:-2]
-            print(args)
+            #print(args)
         
-            fnwrite += f"def {name}({args}):\n\t{PRJ_NAME}.{name}({args})\n"
-            print(fnwrite)
+            fnwrite += f"def {name}({args}):\n\t{docstr}\n\t{PRJ_NAME}.{name}({args})\n"
+            #print(fnwrite)
             file.app("fd", fnwrite)
     else:
         file.app("cfd", fnwrite)
@@ -180,12 +195,19 @@ def gen_class(clsdat, file: File):
     NEEDS_INSTANCE = False
     name = clsdat['name']
     funcs = clsdat['mfuncs']
+    print(f"GEN CS> {name}")
 
     wclsDef = f"class {name}:\n\t"
     for fn in funcs:
         # generate function decl for class
         gen_func_sig(fn, file, True)
         ty = IsCD(fn)
+        docstr = ""
+
+        # get the doc string
+        if "doc" in fn:
+            docstr = gen_fn_doc(fn)
+
         if ty == "Con":
             # Generate the class instance
             wclsDef += f"def __init__(self):\n\t\tself.cInstance = {PRJ_NAME}.{fn['name']}()\n\n\t"
@@ -193,8 +215,8 @@ def gen_class(clsdat, file: File):
             wclsDef += f"def __del__(self):\n\t\t{PRJ_NAME}.{fn['name']}(self.cInstance)\n\n\t"
 
         else:
-            defNameI = fn['name'].find("_")
-            defName = fn['name'][defNameI + 1:]
+            defNameIndex = fn['name'].find("_")
+            defName = fn['name'][defNameIndex + 1:]
 
             params = fn['params']
             args: str = ""
@@ -212,9 +234,9 @@ def gen_class(clsdat, file: File):
                     #print(args)
                     i += 1
             if NEEDS_INSTANCE:
-                wclsDef += f"def {defName}(self{args}):\n\t\t{PRJ_NAME}.{fn['name']}(self.cInstance{args})\n\n\t"
+                wclsDef += f"def {defName}(self{args}):\n\t\t{docstr}\n\t\t{PRJ_NAME}.{fn['name']}(self.cInstance{args})\n\n\t"
             else:
-                wclsDef += f"def {defName}(self{args}):\n\t\t{PRJ_NAME}.{fn['name']}({args})\n\n\t"
+                wclsDef += f"def {defName}(self{args}):\n\t\t{docstr}\n\t\t{PRJ_NAME}.{fn['name']}({args})\n\n\t"
 
     file.app("cd", wclsDef)
 
@@ -230,7 +252,7 @@ def setup_impdta(jd):
     for fn in jd['funcs']:
         gen_func_sig(fn, IMPDTA)
     for cls in jd['class']:
-        print(cls['name'])
+        #print(cls['name'])
         gen_class(cls, IMPDTA)
 
     IMPDTA.write()
